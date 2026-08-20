@@ -4,9 +4,6 @@ import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('AppController');
 
-/**
- * Состояния приложения
- */
 export const AppState = {
   INITIALIZING: 'initializing',
   INITIALIZED: 'initialized',
@@ -16,23 +13,13 @@ export const AppState = {
   DISPOSED: 'disposed'
 };
 
-/**
- * Главный контроллер приложения
- */
 export class AppController {
-  /** @type {IContext|null} */
   activeContext = null;
-  /** @type {Map<string, IContext>} */
   contexts = new Map();
-  /** @type {EventBus} */
   eventBus = null;
-  /** @type {BaseGlobe|null} */
   globeInstance = null;
-  /** @type {BaseLayerManager|null} */
   layerManager = null;
-  /** @type {string} */
   state = AppState.INITIALIZING;
-  /** @type {boolean} */
   isFirstContextSwitch = true;
 
   constructor() {
@@ -40,40 +27,25 @@ export class AppController {
     this.setupEventHandlers();
   }
 
-  /**
-   * Получение экземпляра глобуса
-   * @returns {BaseGlobe|null}
-   */
   get globe() {
     return this.globeInstance;
   }
 
-  /**
-   * Инициализация приложения
-   * @param {HTMLElement} container - DOM элемент
-   * @param {Object} config - Конфигурация
-   * @returns {Promise<void>}
-   */
   async initialize(container, config) {
     this.state = AppState.INITIALIZING;
 
     try {
       logger.info('Initializing application...');
 
-      // Инициализация глобуса
       this.globeInstance = config.globeCreator(container, config.globeConfig);
-
-      // Инициализация менеджера слоев
       this.layerManager = config.layerManagerCreator(this.globeInstance.scene);
 
-      // Регистрация контекстов
       for (const context of config.contexts) {
         this.contexts.set(context.id, context);
         await context.initialize();
         logger.info(`Context registered: ${context.id}`);
       }
 
-      // Активация первого контекста
       if (this.contexts.size > 0) {
         const firstContext = this.contexts.values().next().value;
         await this.switchContext(firstContext.id);
@@ -98,11 +70,6 @@ export class AppController {
     }
   }
 
-  /**
-   * Переключение контекста
-   * @param {string} contextId - ID контекста
-   * @returns {Promise<void>}
-   */
   async switchContext(contextId) {
     const newContext = this.contexts.get(contextId);
     if (!newContext) {
@@ -112,27 +79,27 @@ export class AppController {
     const oldContextId = this.activeContext?.id || null;
     logger.info(`Switching context from ${oldContextId} to ${contextId}`);
 
-    // Деактивация текущего контекста
     if (this.activeContext) {
       await this.activeContext.deactivate();
     }
 
-    // Активация нового контекста
     this.activeContext = newContext;
     await newContext.activate();
 
-    // Добавление слоев контекста в менеджер
     if (this.layerManager) {
-      // Очищаем предыдущие слои
       this.layerManager.clear();
 
-      // Получаем слои из контекста
       const layers = newContext.getLayers();
       logger.info(`Adding ${layers.length} layers from context ${contextId}`);
 
       for (const layer of layers) {
         try {
-          await this.layerManager.addLayer(layer);
+          // Передаем камеру в слой для LOD
+          if (this.globeInstance?.camera) {
+            await this.layerManager.addLayer(layer, { camera: this.globeInstance.camera });
+          } else {
+            await this.layerManager.addLayer(layer);
+          }
           logger.info(`Layer added: ${layer.id}`);
         } catch (error) {
           logger.warn(`Error adding layer ${layer.id}:`, error);
@@ -149,48 +116,37 @@ export class AppController {
     logger.info(`Context switched to: ${contextId}`);
   }
 
-  /**
-   * Получение активного контекста
-   * @returns {IContext|null}
-   */
   getActiveContext() {
     return this.activeContext;
   }
 
-  /**
-   * Получение всех контекстов
-   * @returns {IContext[]}
-   */
   getContexts() {
     return Array.from(this.contexts.values());
   }
 
-  /**
-   * Получение контекста по ID
-   * @param {string} contextId - ID контекста
-   * @returns {IContext|undefined}
-   */
   getContext(contextId) {
     return this.contexts.get(contextId);
   }
 
-  /**
-   * Обновление состояния приложения
-   * @param {number} deltaTime - Время с последнего обновления
-   */
   update(deltaTime) {
     if (this.globeInstance) {
       this.globeInstance.update(deltaTime);
+      
+      // Передаем позицию камеры в слои для LOD
+      if (this.layerManager && this.globeInstance.camera) {
+        const cameraPos = this.globeInstance.camera.position.clone();
+        for (const layer of this.layerManager.layers.values()) {
+          if (layer.updateLOD) {
+            layer.updateLOD(cameraPos);
+          }
+        }
+      }
     }
     if (this.layerManager) {
       this.layerManager.update(deltaTime);
     }
   }
 
-  /**
-   * Обработка событий мыши
-   * @param {MouseEvent} event - Событие мыши
-   */
   handleMouseEvent(event) {
     if (!this.globeInstance || !this.activeContext) {
       return;
@@ -206,15 +162,12 @@ export class AppController {
       return;
     }
 
-    // Определение объекта под курсором
     const objects = this.layerManager?.getAllInteractiveObjects() || [];
     let hitObject = null;
 
-    // Используем Raycaster для определения попадания
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2(x, y);
 
-    // Получаем камеру из глобуса
     const camera = this.globeInstance.camera;
     if (!camera) {
       return;
@@ -238,9 +191,6 @@ export class AppController {
     }
   }
 
-  /**
-   * Настройка обработчиков событий
-   */
   setupEventHandlers() {
     this.eventBus.on('system:error', (data) => {
       logger.error(`[${data.module}] Error:`, data.error);
@@ -251,9 +201,6 @@ export class AppController {
     });
   }
 
-  /**
-   * Очистка ресурсов
-   */
   dispose() {
     if (this.activeContext) {
       this.activeContext.deactivate();
@@ -277,10 +224,6 @@ export class AppController {
     logger.info('Application disposed');
   }
 
-  /**
-   * Получение шины событий
-   * @returns {EventBus}
-   */
   getEventBus() {
     return this.eventBus;
   }

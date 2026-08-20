@@ -1,35 +1,31 @@
 import { BaseLayerManager } from '../abstract/BaseLayerManager';
 
-/**
- * Реализация менеджера слоев
- */
 export class LayerManager extends BaseLayerManager {
   constructor(scene) {
     super(scene);
   }
 
-  async addLayer(layer, position) {
+  async addLayer(layer, options = {}) {
     if (this.layers.has(layer.id)) {
       throw new Error(`Layer ${layer.id} already exists`);
     }
 
     this.layers.set(layer.id, layer);
 
-    // Группировка по типу
     if (!this.layersByType.has(layer.type)) {
       this.layersByType.set(layer.type, []);
     }
     this.layersByType.get(layer.type).push(layer);
 
-    // Добавление в порядок отрисовки
+    const position = options.position;
     if (position !== undefined) {
       this.renderOrder.splice(position, 0, layer.id);
     } else {
       this.renderOrder.push(layer.id);
     }
 
-    // Отрисовка слоя
-    await layer.render(this.scene);
+    // Передаем опции в render
+    await layer.render(this.scene, options);
   }
 
   async removeLayer(layerId) {
@@ -38,10 +34,7 @@ export class LayerManager extends BaseLayerManager {
       return;
     }
 
-    // Удаление со сцены
     layer.remove();
-
-    // Удаление из хранилищ
     this.layers.delete(layerId);
 
     const typeLayers = this.layersByType.get(layer.type);
@@ -59,10 +52,9 @@ export class LayerManager extends BaseLayerManager {
   }
 
   update(deltaTime) {
-    // Обновление слоев (можно добавить логику при необходимости)
     for (const layer of this.layers.values()) {
-      if (layer.visible) {
-        // Здесь может быть логика обновления слоев
+      if (layer.visible && layer.update) {
+        layer.update(deltaTime);
       }
     }
   }
