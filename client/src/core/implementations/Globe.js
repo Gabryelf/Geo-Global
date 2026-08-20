@@ -1,22 +1,27 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { BaseGlobe, GlobeConfig } from '../abstract/BaseGlobe';
+import { BaseGlobe } from '../abstract/BaseGlobe';
 
 /**
  * Реализация глобуса с использованием Three.js
  */
 export class Globe extends BaseGlobe {
-  private starField: THREE.Points | null = null;
-  private cloudMesh: THREE.Mesh | null = null;
-  private raycaster: THREE.Raycaster = new THREE.Raycaster();
-  private mouse: THREE.Vector2 = new THREE.Vector2();
-  private resizeObserver: ResizeObserver | null = null;
+  /** @type {THREE.Points|null} */
+  starField = null;
+  /** @type {THREE.Mesh|null} */
+  cloudMesh = null;
+  /** @type {THREE.Raycaster} */
+  raycaster = new THREE.Raycaster();
+  /** @type {THREE.Vector2} */
+  mouse = new THREE.Vector2();
+  /** @type {ResizeObserver|null} */
+  resizeObserver = null;
 
-  constructor(container: HTMLElement, config: GlobeConfig) {
+  constructor(container, config) {
     super(container, config);
   }
 
-  protected initScene(container: HTMLElement, config: GlobeConfig): void {
+  initScene(container, config) {
     // Создание сцены
     this._scene = new THREE.Scene();
     this._scene.background = new THREE.Color(config.backgroundColor);
@@ -73,14 +78,14 @@ export class Globe extends BaseGlobe {
     console.log('Renderer created:', this.renderer);
   }
 
-  protected createGlobe(config: GlobeConfig): void {
+  createGlobe(config) {
     // Создание сферы глобуса
     const geometry = new THREE.SphereGeometry(config.radius, config.segments, config.segments);
-    
+
     // Загрузка текстуры
     const textureLoader = new THREE.TextureLoader();
     const texture = textureLoader.load(config.textureUrl);
-    
+
     const material = new THREE.MeshStandardMaterial({
       map: texture,
       roughness: 0.5,
@@ -124,7 +129,7 @@ export class Globe extends BaseGlobe {
     this._scene.add(backLight);
   }
 
-  protected createAtmosphere(): void {
+  createAtmosphere() {
     if (!this.config) {
       console.warn('Config not available for atmosphere creation');
       return;
@@ -135,7 +140,7 @@ export class Globe extends BaseGlobe {
       48,
       48
     );
-    
+
     const material = new THREE.ShaderMaterial({
       vertexShader: `
         varying vec3 vNormal;
@@ -168,7 +173,7 @@ export class Globe extends BaseGlobe {
     this.globeGroup.add(this.atmosphere);
   }
 
-  protected createStarField(): void {
+  createStarField() {
     if (!this.config) {
       console.warn('Config not available for star field creation');
       return;
@@ -213,7 +218,7 @@ export class Globe extends BaseGlobe {
     this._scene.add(this.starField);
   }
 
-  public update(deltaTime: number): void {
+  update(deltaTime) {
     if (this.controls) {
       this.controls.update();
     }
@@ -225,7 +230,7 @@ export class Globe extends BaseGlobe {
 
     // Мерцание звезд
     if (this.starField) {
-      const material = this.starField.material as THREE.PointsMaterial;
+      const material = this.starField.material;
       material.opacity = 0.7 + Math.sin(Date.now() * 0.001) * 0.1;
     }
 
@@ -237,7 +242,7 @@ export class Globe extends BaseGlobe {
         Math.min(
           this.MAX_ZOOM,
           ((distance - this.controls.minDistance) /
-           (this.controls.maxDistance - this.controls.minDistance)) * 100
+            (this.controls.maxDistance - this.controls.minDistance)) * 100
         )
       );
     }
@@ -248,25 +253,25 @@ export class Globe extends BaseGlobe {
     }
   }
 
-  public setZoomLevel(level: number): void {
+  setZoomLevel(level) {
     if (!this.camera || !this.controls) return;
-    
+
     const clamped = Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, level));
     const ratio = clamped / this.MAX_ZOOM;
     const distance = this.controls.minDistance +
       (this.controls.maxDistance - this.controls.minDistance) * ratio;
-    
+
     const direction = this.camera.position.clone().normalize();
     this.camera.position.copy(direction.multiplyScalar(distance));
     this.controls.update();
   }
 
-  public getSurfaceCoordinates(mouseX: number, mouseY: number): THREE.Vector3 | null {
+  getSurfaceCoordinates(mouseX, mouseY) {
     if (!this.globeMesh || !this.camera) return null;
-    
+
     this.mouse.set(mouseX, mouseY);
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    
+
     const intersects = this.raycaster.intersectObject(this.globeMesh);
     if (intersects.length > 0) {
       return intersects[0].point;
@@ -274,11 +279,11 @@ export class Globe extends BaseGlobe {
     return null;
   }
 
-  public latLonToPosition(lat: number, lon: number, radius?: number): THREE.Vector3 {
+  latLonToPosition(lat, lon, radius) {
     const r = radius || (this.config ? this.config.radius : 1);
     const phi = (90 - lat) * Math.PI / 180;
     const theta = lon * Math.PI / 180;
-    
+
     return new THREE.Vector3(
       r * Math.sin(phi) * Math.cos(theta),
       r * Math.cos(phi),
@@ -286,7 +291,7 @@ export class Globe extends BaseGlobe {
     );
   }
 
-  public dispose(): void {
+  dispose() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;

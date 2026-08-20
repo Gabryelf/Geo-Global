@@ -1,14 +1,28 @@
 /**
  * Утилита для логирования с различными уровнями
  */
+
+export const LogLevel = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3,
+    TRACE: 4
+};
+
 export class Logger {
-    private static instance: Logger;
-    private level: LogLevel = LogLevel.INFO;
-    private context: string = 'App';
+    static instance = null;
+    level = LogLevel.INFO;
+    context = 'App';
 
-    private constructor() { }
+    constructor() {
+        if (Logger.instance) {
+            return Logger.instance;
+        }
+        Logger.instance = this;
+    }
 
-    public static getInstance(): Logger {
+    static getInstance() {
         if (!Logger.instance) {
             Logger.instance = new Logger();
         }
@@ -17,26 +31,34 @@ export class Logger {
 
     /**
      * Установка уровня логирования
-     * @param level - Уровень
+     * @param {number} level - Уровень
      */
-    public setLevel(level: LogLevel): void {
+    setLevel(level) {
         this.level = level;
     }
 
     /**
      * Установка контекста
-     * @param context - Контекст логирования
+     * @param {string} context - Контекст логирования
      */
-    public setContext(context: string): void {
+    setContext(context) {
         this.context = context;
     }
 
     /**
-     * Логирование ошибки
-     * @param message - Сообщение
-     * @param args - Дополнительные аргументы
+     * Форматирование временной метки
+     * @returns {string} Строка с временем
      */
-    public error(message: string, ...args: any[]): void {
+    formatTimestamp() {
+        return new Date().toISOString().replace('T', ' ').substring(0, 19);
+    }
+
+    /**
+     * Логирование ошибки
+     * @param {string} message - Сообщение
+     * @param {...any} args - Дополнительные аргументы
+     */
+    error(message, ...args) {
         if (this.level <= LogLevel.ERROR) {
             console.error(`[${this.formatTimestamp()}] [${this.context}] ERROR: ${message}`, ...args);
         }
@@ -44,10 +66,10 @@ export class Logger {
 
     /**
      * Логирование предупреждения
-     * @param message - Сообщение
-     * @param args - Дополнительные аргументы
+     * @param {string} message - Сообщение
+     * @param {...any} args - Дополнительные аргументы
      */
-    public warn(message: string, ...args: any[]): void {
+    warn(message, ...args) {
         if (this.level <= LogLevel.WARN) {
             console.warn(`[${this.formatTimestamp()}] [${this.context}] WARN: ${message}`, ...args);
         }
@@ -55,10 +77,10 @@ export class Logger {
 
     /**
      * Логирование информационного сообщения
-     * @param message - Сообщение
-     * @param args - Дополнительные аргументы
+     * @param {string} message - Сообщение
+     * @param {...any} args - Дополнительные аргументы
      */
-    public info(message: string, ...args: any[]): void {
+    info(message, ...args) {
         if (this.level <= LogLevel.INFO) {
             console.info(`[${this.formatTimestamp()}] [${this.context}] INFO: ${message}`, ...args);
         }
@@ -66,10 +88,10 @@ export class Logger {
 
     /**
      * Логирование отладочного сообщения
-     * @param message - Сообщение
-     * @param args - Дополнительные аргументы
+     * @param {string} message - Сообщение
+     * @param {...any} args - Дополнительные аргументы
      */
-    public debug(message: string, ...args: any[]): void {
+    debug(message, ...args) {
         if (this.level <= LogLevel.DEBUG) {
             console.debug(`[${this.formatTimestamp()}] [${this.context}] DEBUG: ${message}`, ...args);
         }
@@ -77,41 +99,22 @@ export class Logger {
 
     /**
      * Логирование трассировки
-     * @param message - Сообщение
-     * @param args - Дополнительные аргументы
+     * @param {string} message - Сообщение
+     * @param {...any} args - Дополнительные аргументы
      */
-    public trace(message: string, ...args: any[]): void {
+    trace(message, ...args) {
         if (this.level <= LogLevel.TRACE) {
             console.trace(`[${this.formatTimestamp()}] [${this.context}] TRACE: ${message}`, ...args);
         }
     }
-
-    /**
-     * Форматирование временной метки
-     * @returns Строка с временем
-     */
-    private formatTimestamp(): string {
-        return new Date().toISOString().replace('T', ' ').substring(0, 19);
-    }
-}
-
-/**
- * Уровни логирования
- */
-export enum LogLevel {
-    ERROR = 0,
-    WARN = 1,
-    INFO = 2,
-    DEBUG = 3,
-    TRACE = 4
 }
 
 /**
  * Создание логгера для конкретного модуля
- * @param context - Контекст модуля
- * @returns Экземпляр логгера
+ * @param {string} context - Контекст модуля
+ * @returns {Logger} Экземпляр логгера
  */
-export function createLogger(context: string): Logger {
+export function createLogger(context) {
     const logger = Logger.getInstance();
     logger.setContext(context);
     return logger;

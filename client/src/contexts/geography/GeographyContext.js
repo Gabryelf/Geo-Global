@@ -1,8 +1,6 @@
 import * as THREE from 'three';
-import { IContext, ContextState } from '../../core/interfaces/IContext';
-import { ILayer } from '../../core/interfaces/ILayer';
+import { ContextState } from '../../core/interfaces/IContext';
 import { LayerType } from '../../core/interfaces/ILayer';
-import { BaseDataLoader } from '../../core/abstract/BaseDataLoader';
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('GeographyContext');
@@ -10,29 +8,33 @@ const logger = createLogger('GeographyContext');
 /**
  * Тестовый слой для географии
  */
-class TestGeographyLayer implements ILayer {
-  public readonly id = 'test-geo-layer';
-  public readonly name = 'Тестовый географический слой';
-  public readonly type = LayerType.THEMATIC;
-  public visible = true;
-  public opacity = 1;
-  public readonly zIndex = 10;
-  
-  private objects: THREE.Object3D[] = [];
-  private group: THREE.Group = new THREE.Group();
-  private dataLoaded = false;
-  private scene: THREE.Scene | null = null;
+class TestGeographyLayer {
+  id = 'test-geo-layer';
+  name = 'Тестовый географический слой';
+  type = LayerType.THEMATIC;
+  visible = true;
+  opacity = 1;
+  zIndex = 10;
 
-  async loadData(data: any[]): Promise<void> {
+  /** @type {THREE.Object3D[]} */
+  objects = [];
+  /** @type {THREE.Group} */
+  group = new THREE.Group();
+  /** @type {boolean} */
+  dataLoaded = false;
+  /** @type {THREE.Scene|null} */
+  scene = null;
+
+  async loadData(data) {
     logger.info(`Loading ${data.length} items`);
     this.dataLoaded = true;
   }
 
-  async updateData(data: Partial<any>[]): Promise<void> {
+  async updateData(data) {
     logger.info(`Updating ${data.length} items`);
   }
 
-  async render(scene: THREE.Scene, options?: any): Promise<void> {
+  async render(scene, options) {
     this.scene = scene;
     this.group = new THREE.Group();
     this.objects = [];
@@ -56,7 +58,6 @@ class TestGeographyLayer implements ILayer {
     for (const pos of positions) {
       const phi = (90 - pos.lat) * Math.PI / 180;
       const theta = pos.lon * Math.PI / 180;
-      
       const x = radius * Math.sin(phi) * Math.cos(theta);
       const y = radius * Math.cos(phi);
       const z = radius * Math.sin(phi) * Math.sin(theta);
@@ -64,23 +65,23 @@ class TestGeographyLayer implements ILayer {
       // Создание маркера с разными цветами
       const colors = [0x4080ff, 0x4ade80, 0xfacc15, 0xf472b6, 0xfb923c];
       const color = colors[Math.floor(Math.random() * colors.length)];
-      
+
       const markerGeom = new THREE.SphereGeometry(0.015, 8, 8);
-      const markerMat = new THREE.MeshBasicMaterial({ 
+      const markerMat = new THREE.MeshBasicMaterial({
         color: color,
         transparent: true,
         opacity: 0.9
       });
       const marker = new THREE.Mesh(markerGeom, markerMat);
       marker.position.set(x, y, z);
-      marker.userData = { 
-        name: pos.name, 
-        lat: pos.lat, 
+      marker.userData = {
+        name: pos.name,
+        lat: pos.lat,
         lon: pos.lon,
         country: pos.country,
         type: 'city'
       };
-      
+
       // Свечение маркера
       const glowGeom = new THREE.SphereGeometry(0.025, 8, 8);
       const glowMat = new THREE.MeshBasicMaterial({
@@ -90,7 +91,7 @@ class TestGeographyLayer implements ILayer {
       });
       const glow = new THREE.Mesh(glowGeom, glowMat);
       glow.position.set(x, y, z);
-      
+
       this.group.add(glow);
       this.group.add(marker);
       this.objects.push(marker, glow);
@@ -101,11 +102,10 @@ class TestGeographyLayer implements ILayer {
 
     scene.add(this.group);
     this.dataLoaded = true;
-    
     logger.info(`Rendered ${positions.length} markers`);
   }
 
-  private createTestBoundaries(radius: number): void {
+  createTestBoundaries(radius) {
     // Европейские границы (упрощенно)
     const boundaries = [
       { lat: 45, lon: -10, color: 0xff6644 },
@@ -125,7 +125,7 @@ class TestGeographyLayer implements ILayer {
     const allBoundaries = [boundaries, boundaries2];
 
     for (const boundary of allBoundaries) {
-      const points: THREE.Vector3[] = [];
+      const points = [];
       for (const point of boundary) {
         const phi = (90 - point.lat) * Math.PI / 180;
         const theta = point.lon * Math.PI / 180;
@@ -137,7 +137,7 @@ class TestGeographyLayer implements ILayer {
       }
 
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const material = new THREE.LineBasicMaterial({ 
+      const material = new THREE.LineBasicMaterial({
         color: boundary[0].color,
         transparent: true,
         opacity: 0.5
@@ -148,24 +148,24 @@ class TestGeographyLayer implements ILayer {
     }
   }
 
-  remove(): void {
+  remove() {
     if (this.group && this.group.parent) {
       this.group.removeFromParent();
     }
   }
 
-  getInteractiveObjects(): THREE.Object3D[] {
+  getInteractiveObjects() {
     return this.objects;
   }
 
-  filter(predicate: (item: any) => boolean): any[] {
+  filter(predicate) {
     return [];
   }
 
-  clear(): void {
+  clear() {
     if (this.group) {
       // Удаляем все дочерние объекты
-      while(this.group.children.length > 0) {
+      while (this.group.children.length > 0) {
         const child = this.group.children[0];
         if (child instanceof THREE.Mesh) {
           child.geometry.dispose();
@@ -184,7 +184,7 @@ class TestGeographyLayer implements ILayer {
     logger.info('Layer cleared');
   }
 
-  isDataLoaded(): boolean {
+  isDataLoaded() {
     return this.dataLoaded;
   }
 }
@@ -192,27 +192,28 @@ class TestGeographyLayer implements ILayer {
 /**
  * Контекст географии
  */
-export class GeographyContext implements IContext {
-  public readonly id: string = 'geography';
-  public readonly name: string = 'Географический атлас';
-  public readonly description: string = 'Изучение географических объектов и границ';
-  public readonly version: string = '1.0.0';
-  
-  public state: ContextState = ContextState.UNINITIALIZED;
-  
-  private layers: ILayer[] = [];
-  private dataLoaders: Map<string, BaseDataLoader> = new Map();
-  private testLayer: TestGeographyLayer | null = null;
+export class GeographyContext {
+  id = 'geography';
+  name = 'Географический атлас';
+  description = 'Изучение географических объектов и границ';
+  version = '1.0.0';
+  state = ContextState.UNINITIALIZED;
 
-  async initialize(config?: any): Promise<void> {
+  /** @type {ILayer[]} */
+  layers = [];
+  /** @type {Map<string, BaseDataLoader>} */
+  dataLoaders = new Map();
+  /** @type {TestGeographyLayer|null} */
+  testLayer = null;
+
+  async initialize(config) {
     this.state = ContextState.INITIALIZING;
     logger.info('Initializing Geography Context...');
-    
+
     try {
       // Создание тестового слоя
       this.testLayer = new TestGeographyLayer();
       this.layers.push(this.testLayer);
-      
       this.state = ContextState.INITIALIZED;
       logger.info('Geography Context initialized');
     } catch (error) {
@@ -222,14 +223,14 @@ export class GeographyContext implements IContext {
     }
   }
 
-  async activate(): Promise<void> {
+  async activate() {
     if (this.state === ContextState.UNINITIALIZED) {
       throw new Error('Context not initialized');
     }
-    
+
     this.state = ContextState.ACTIVATING;
     logger.info('Activating Geography Context...');
-    
+
     try {
       // Слои активируются через LayerManager
       this.state = ContextState.ACTIVE;
@@ -241,14 +242,14 @@ export class GeographyContext implements IContext {
     }
   }
 
-  async deactivate(): Promise<void> {
+  async deactivate() {
     if (this.state !== ContextState.ACTIVE) {
       return;
     }
-    
+
     this.state = ContextState.DEACTIVATING;
     logger.info('Deactivating Geography Context...');
-    
+
     try {
       // Очистка слоев
       for (const layer of this.layers) {
@@ -259,7 +260,6 @@ export class GeographyContext implements IContext {
           logger.warn(`Error clearing layer ${layer.id}:`, error);
         }
       }
-      
       this.state = ContextState.INITIALIZED;
       logger.info('Geography Context deactivated');
     } catch (error) {
@@ -269,54 +269,56 @@ export class GeographyContext implements IContext {
     }
   }
 
-  async update(filters?: Record<string, any>): Promise<void> {
+  async update(filters) {
     if (this.state !== ContextState.ACTIVE) {
       return;
     }
     logger.debug('Updating Geography Context with filters:', filters);
   }
 
-  async getData<T = any>(query?: Record<string, any>): Promise<T[]> {
+  async getData(query) {
     return [];
   }
 
-  getLayers(): ILayer[] {
+  getLayers() {
     return this.layers;
   }
 
-  handleClick(object: THREE.Object3D, position: THREE.Vector3): void {
+  handleClick(object, position) {
     const name = object.userData?.name || 'Неизвестный объект';
     const country = object.userData?.country || '';
     const lat = object.userData?.lat || '—';
     const lon = object.userData?.lon || '—';
-    
+
     logger.info(`Clicked on: ${name} (${country}) at position:`, position);
-    
+
     // Отображение информации
     const panel = document.getElementById('info-panel');
     if (panel) {
       const title = panel.querySelector('.title');
       const subtitle = panel.querySelector('.subtitle');
+
       if (title) {
         title.textContent = `📍 ${name}${country ? `, ${country}` : ''}`;
       }
       if (subtitle) {
         subtitle.textContent = `Широта: ${lat}, Долгота: ${lon}`;
       }
+
       panel.classList.add('visible');
-      
+
       // Авто-скрытие через 3 секунды
-      clearTimeout((panel as any)._timeout);
-      (panel as any)._timeout = setTimeout(() => {
+      clearTimeout(panel._timeout);
+      panel._timeout = setTimeout(() => {
         panel.classList.remove('visible');
       }, 3000);
     }
   }
 
-  handleHover(object: THREE.Object3D | null, position: THREE.Vector3): void {
+  handleHover(object, position) {
     // Изменение курсора
     document.body.style.cursor = object ? 'pointer' : 'default';
-    
+
     // Показ подсказки
     if (object && object.userData?.name) {
       const panel = document.getElementById('info-panel');
@@ -330,7 +332,7 @@ export class GeographyContext implements IContext {
     }
   }
 
-  dispose(): void {
+  dispose() {
     for (const layer of this.layers) {
       try {
         layer.clear();

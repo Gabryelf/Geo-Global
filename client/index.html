@@ -10,25 +10,21 @@
       padding: 0;
       box-sizing: border-box;
     }
-
     body {
       background: #000011;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-
     #app {
       width: 100vw;
       height: 100vh;
       position: relative;
     }
-
     #globe-container {
       width: 100%;
       height: 100%;
       display: block;
     }
-
     /* UI Overlay */
     #ui-overlay {
       position: absolute;
@@ -39,7 +35,6 @@
       pointer-events: none;
       z-index: 10;
     }
-
     /* Top Bar */
     .top-bar {
       display: flex;
@@ -49,7 +44,6 @@
       background: linear-gradient(180deg, rgba(0,0,20,0.8) 0%, transparent 100%);
       pointer-events: auto;
     }
-
     .context-btn {
       padding: 10px 24px;
       border: 1px solid rgba(255,255,255,0.2);
@@ -63,21 +57,18 @@
       backdrop-filter: blur(10px);
       pointer-events: auto;
     }
-
     .context-btn:hover {
       background: rgba(255,255,255,0.1);
       color: rgba(255,255,255,0.9);
       border-color: rgba(255,255,255,0.4);
       transform: translateY(-2px);
     }
-
     .context-btn.active {
       background: rgba(64, 128, 255, 0.25);
       color: #fff;
       border-color: rgba(64, 128, 255, 0.6);
       box-shadow: 0 0 20px rgba(64, 128, 255, 0.15);
     }
-
     /* Info Panel */
     #info-panel {
       position: absolute;
@@ -98,22 +89,18 @@
       min-width: 200px;
       max-width: 80%;
     }
-
     #info-panel.visible {
       opacity: 1;
     }
-
     #info-panel .title {
       font-weight: 600;
       color: #fff;
       margin-bottom: 4px;
     }
-
     #info-panel .subtitle {
       font-size: 13px;
       color: rgba(255,255,255,0.5);
     }
-
     /* Status Indicator */
     .status-indicator {
       position: absolute;
@@ -126,7 +113,6 @@
       font-size: 12px;
       pointer-events: none;
     }
-
     .status-dot {
       width: 8px;
       height: 8px;
@@ -134,12 +120,10 @@
       background: #4ade80;
       animation: pulse 2s infinite;
     }
-
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
-
     /* Loading */
     #loading {
       position: fixed;
@@ -152,12 +136,10 @@
       z-index: 100;
       transition: opacity 0.8s ease;
     }
-
     #loading.hidden {
       opacity: 0;
       pointer-events: none;
     }
-
     .loader {
       width: 48px;
       height: 48px;
@@ -166,18 +148,15 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
     .loading-text {
       color: rgba(255,255,255,0.3);
       font-size: 14px;
       margin-top: 20px;
       letter-spacing: 2px;
     }
-
     #error-message {
       position: fixed;
       bottom: 50%;
@@ -198,7 +177,6 @@
 <body>
   <div id="app">
     <div id="globe-container"></div>
-    
     <div id="ui-overlay">
       <div class="top-bar">
         <button class="context-btn active" data-context="geography">🌍 География</button>
@@ -206,26 +184,21 @@
         <button class="context-btn" data-context="biology">🧬 Биология</button>
         <button class="context-btn" data-context="technical">⚙️ Техника</button>
       </div>
-      
       <div class="status-indicator">
         <span class="status-dot"></span>
         <span>Система активна</span>
       </div>
     </div>
-
     <div id="info-panel">
       <div class="title">Добро пожаловать</div>
       <div class="subtitle">Вращайте глобус и исследуйте мир</div>
     </div>
   </div>
-
   <div id="loading">
     <div class="loader"></div>
     <div class="loading-text">ЗАГРУЗКА ГЛОБУСА</div>
   </div>
-
   <div id="error-message"></div>
-
-  <script type="module" src="./src/main.ts"></script>
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>

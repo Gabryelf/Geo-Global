@@ -1,27 +1,25 @@
-import * as THREE from 'three';
-import { ILayer, LayerType } from '../interfaces/ILayer';
 import { BaseLayerManager } from '../abstract/BaseLayerManager';
 
 /**
  * Реализация менеджера слоев
  */
 export class LayerManager extends BaseLayerManager {
-  constructor(scene: THREE.Scene) {
+  constructor(scene) {
     super(scene);
   }
 
-  public async addLayer(layer: ILayer, position?: number): Promise<void> {
+  async addLayer(layer, position) {
     if (this.layers.has(layer.id)) {
       throw new Error(`Layer ${layer.id} already exists`);
     }
 
     this.layers.set(layer.id, layer);
-    
+
     // Группировка по типу
     if (!this.layersByType.has(layer.type)) {
       this.layersByType.set(layer.type, []);
     }
-    this.layersByType.get(layer.type)!.push(layer);
+    this.layersByType.get(layer.type).push(layer);
 
     // Добавление в порядок отрисовки
     if (position !== undefined) {
@@ -34,7 +32,7 @@ export class LayerManager extends BaseLayerManager {
     await layer.render(this.scene);
   }
 
-  public async removeLayer(layerId: string): Promise<void> {
+  async removeLayer(layerId) {
     const layer = this.layers.get(layerId);
     if (!layer) {
       return;
@@ -45,7 +43,7 @@ export class LayerManager extends BaseLayerManager {
 
     // Удаление из хранилищ
     this.layers.delete(layerId);
-    
+
     const typeLayers = this.layersByType.get(layer.type);
     if (typeLayers) {
       const index = typeLayers.indexOf(layer);
@@ -60,8 +58,8 @@ export class LayerManager extends BaseLayerManager {
     }
   }
 
-  public update(deltaTime: number): void {
-    // Обновление слоев
+  update(deltaTime) {
+    // Обновление слоев (можно добавить логику при необходимости)
     for (const layer of this.layers.values()) {
       if (layer.visible) {
         // Здесь может быть логика обновления слоев
@@ -69,7 +67,7 @@ export class LayerManager extends BaseLayerManager {
     }
   }
 
-  public clear(): void {
+  clear() {
     for (const layer of this.layers.values()) {
       try {
         layer.clear();

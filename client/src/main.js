@@ -1,10 +1,9 @@
 import * as THREE from 'three';
 import { AppController } from './core/core/AppController';
-import { Logger, createLogger } from './utils/logger';
+import { createLogger } from './utils/logger';
 import { GeographyContext } from './contexts/geography/GeographyContext';
 import { Globe } from './core/implementations/Globe';
 import { LayerManager } from './core/implementations/LayerManager';
-import { GlobeConfig } from './core/abstract/BaseGlobe';
 
 const logger = createLogger('Main');
 
@@ -14,16 +13,17 @@ const logger = createLogger('Main');
 (async function main() {
   try {
     logger.info('Starting application...');
-    
+
     // Получение элемента для рендеринга
     const container = document.getElementById('globe-container');
     if (!container) {
       throw new Error('Container element not found');
     }
+
     logger.info('Container found:', container);
-    
+
     // Конфигурация глобуса
-    const globeConfig: GlobeConfig = {
+    const globeConfig = {
       radius: 1,
       segments: 64,
       textureUrl: 'https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg',
@@ -46,18 +46,18 @@ const logger = createLogger('Main');
         zoomSpeed: 1.0
       }
     };
-    
+
     // Создание контроллера
     const app = new AppController();
-    
+
     // Конфигурация приложения
     const config = {
       globeConfig,
-      globeCreator: (container: HTMLElement, config: any) => {
+      globeCreator: (container, config) => {
         logger.info('Creating globe...');
         return new Globe(container, config);
       },
-      layerManagerCreator: (scene: THREE.Scene) => {
+      layerManagerCreator: (scene) => {
         logger.info('Creating layer manager...');
         return new LayerManager(scene);
       },
@@ -65,12 +65,11 @@ const logger = createLogger('Main');
         new GeographyContext(),
       ]
     };
-    
+
     // Инициализация приложения
     await app.initialize(container, config);
-    
     logger.info('App initialized, globe should be visible');
-    
+
     // Скрытие загрузчика
     const loading = document.getElementById('loading');
     if (loading) {
@@ -79,17 +78,17 @@ const logger = createLogger('Main');
         loading.style.display = 'none';
       }, 800);
     }
-    
+
     // Настройка UI кнопок
     const buttons = document.querySelectorAll('.context-btn');
     buttons.forEach(btn => {
       btn.addEventListener('click', async () => {
         const contextId = btn.getAttribute('data-context');
         if (!contextId) return;
-        
+
         buttons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         try {
           await app.switchContext(contextId);
           logger.info(`Switched to context: ${contextId}`);
@@ -98,34 +97,33 @@ const logger = createLogger('Main');
         }
       });
     });
-    
+
     // Запуск цикла рендеринга
     let lastTime = 0;
     let frameCount = 0;
-    
-    function render(time: number) {
+
+    function render(time) {
       const deltaTime = (time - lastTime) / 1000;
       lastTime = time;
-      
       app.update(deltaTime);
-      
+
       frameCount++;
       if (frameCount % 60 === 0) {
         logger.debug(`Rendering frame ${frameCount}`);
       }
-      
+
       requestAnimationFrame(render);
     }
-    
+
     // Обработка событий мыши
     container.addEventListener('click', (event) => {
       app.handleMouseEvent(event);
     });
-    
+
     container.addEventListener('mousemove', (event) => {
       app.handleMouseEvent(event);
     });
-    
+
     // Обработка изменения размера окна
     window.addEventListener('resize', () => {
       const rect = container.getBoundingClientRect();
@@ -134,10 +132,10 @@ const logger = createLogger('Main');
         globe.resize(rect.width, rect.height);
       }
     });
-    
+
     logger.info('Application is ready!');
     render(0);
-    
+
     // Проверка, что сцена отображается
     setTimeout(() => {
       const canvas = container.querySelector('canvas');
@@ -148,7 +146,7 @@ const logger = createLogger('Main');
         logger.warn('Canvas not found in container');
       }
     }, 1000);
-    
+
   } catch (error) {
     logger.error('Failed to initialize application:', error);
     const errorMsg = document.getElementById('error-message');
