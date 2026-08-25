@@ -1,0 +1,18 @@
+/* Специфичные стили для исторического контекста */
+.history-marker {
+    transition: all var(--transition-fast);
+}
+
+.history-marker:hover {
+    transform: scale(1.2);
+}
+
+.epoch-item {
+    transition: all var(--transition-fast);
+}
+
+.epoch-item.active {
+    background: rgba(64, 128, 255, 0.15);
+    border-color: var(--color-border-active);
+    color: var(--color-text);
+}

@@ -1,0 +1,55 @@
+/* client/public/styles/base/variables.css */
+:root {
+    /* Цвета */
+    --color-primary: #4080ff;
+    --color-primary-dark: #2a5fc7;
+    --color-primary-light: #6a9fff;
+    --color-background: #000011;
+    --color-surface: rgba(255, 255, 255, 0.05);
+    --color-surface-hover: rgba(255, 255, 255, 0.1);
+    --color-text: #ffffff;
+    --color-text-secondary: rgba(255, 255, 255, 0.6);
+    --color-text-muted: rgba(255, 255, 255, 0.3);
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-active: rgba(64, 128, 255, 0.6);
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-error: #ff4444;
+    
+    /* Размеры */
+    --sidebar-width: 320px;
+    --sidebar-collapsed: 56px;
+    --header-height: 70px;
+    --panel-header-height: 50px;
+    
+    /* Отступы */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Скругления */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+    
+    /* Тени */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+    
+    /* Анимации */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+    
+    /* Шрифты */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 15px;
+    --font-size-lg: 18px;
+    --font-size-xl: 24px;
+}

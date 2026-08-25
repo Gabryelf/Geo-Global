@@ -1,0 +1,52 @@
+#loading {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000011;
+    z-index: 100;
+    transition: opacity 0.8s ease;
+}
+
+#loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(255, 255, 255, 0.05);
+    border-top-color: #4080ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-lg);
+    letter-spacing: 2px;
+}
+
+#error-message {
+    position: fixed;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    color: #ff4444;
+    font-size: var(--font-size-md);
+    text-align: center;
+    display: none;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.9);
+    padding: var(--spacing-xl) var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 68, 68, 0.2);
+}

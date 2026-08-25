@@ -1,0 +1,27 @@
+/* client/public/styles/main.css */
+/* Импорт всех стилей */
+
+/* Базовые стили */
+@import './base/reset.css';
+@import './base/variables.css';
+@import './base/typography.css';
+
+/* Компоненты */
+@import './components/globe.css';
+@import './components/header.css';
+@import './components/footer.css';
+@import './components/buttons.css';
+@import './components/panels.css';
+@import './components/lenses.css';
+@import './components/loading.css';
+@import './components/status.css';
+@import './components/info-panel.css';
+
+/* Layouts */
+@import './layouts/app.css';
+@import './layouts/sidebar.css';
+@import './layouts/main-content.css';
+
+/* Контексты */
+@import './contexts/geography.css';
+@import './contexts/history.css';

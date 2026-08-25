@@ -1,0 +1,13 @@
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--spacing-md);
+    text-align: center;
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    background: linear-gradient(0deg, rgba(0,0,20,0.6) 0%, transparent 100%);
+    z-index: 5;
+    pointer-events: none;
+}

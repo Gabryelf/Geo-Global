@@ -1,0 +1,8 @@
+/* Специфичные стили для географического контекста */
+.geography-marker {
+    transition: all var(--transition-fast);
+}
+
+.geography-marker:hover {
+    transform: scale(1.2);
+}

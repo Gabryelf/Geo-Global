@@ -1,0 +1,262 @@
+/* client/public/styles/components/panels.css */
+
+/* Боковая панель */
+.sidebar {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    width: var(--sidebar-width);
+    height: calc(100vh - var(--header-height));
+    background: rgba(0, 0, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--color-border);
+    z-index: 20;
+    transition: transform var(--transition-normal);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar.collapsed {
+    transform: translateX(calc(var(--sidebar-width) - var(--sidebar-collapsed)));
+}
+
+.sidebar-toggle {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 60px;
+    background: rgba(0, 0, 10, 0.8);
+    border: 1px solid var(--color-border);
+    border-right: none;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all var(--transition-fast);
+    backdrop-filter: blur(10px);
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text);
+}
+
+.sidebar-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: var(--panel-header-height);
+    flex-shrink: 0;
+}
+
+.sidebar-header h2 {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.sidebar-header .context-icon {
+    font-size: 20px;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+}
+
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+}
+
+/* Панель контекста */
+.context-panel {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+}
+
+.context-panel.active {
+    display: flex;
+}
+
+/* Заголовок панели */
+.panel-title {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.panel-description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Группа линз */
+.lens-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.lens-group-label {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.lens-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.lens-item:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+
+.lens-item.active {
+    background: rgba(64, 128, 255, 0.15);
+    border-color: var(--color-border-active);
+    color: var(--color-text);
+}
+
+.lens-item .lens-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+}
+
+.lens-item .lens-info {
+    flex: 1;
+}
+
+.lens-item .lens-name {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.lens-item .lens-desc {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+}
+
+.lens-item .lens-status {
+    font-size: var(--font-size-xs);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+}
+
+.lens-item.active .lens-status {
+    background: rgba(64, 128, 255, 0.2);
+    color: var(--color-primary);
+}
+
+/* Кнопка сброса фильтров */
+.reset-filters-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-sm);
+    width: 100%;
+}
+
+.reset-filters-btn:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+    border-color: var(--color-border-active);
+}
+
+/* Эпохи (для исторического контекста) */
+.epoch-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.epoch-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-surface);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.epoch-item:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+
+.epoch-item.active {
+    background: rgba(64, 128, 255, 0.15);
+    border-color: var(--color-border-active);
+    color: var(--color-text);
+}
+
+.epoch-item .epoch-year {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-left: auto;
+}
+
+/* Collapsed state */
+.sidebar.collapsed .sidebar-header h2,
+.sidebar.collapsed .sidebar-content {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    left: -32px;
+}
+
+.sidebar.collapsed .sidebar-toggle .toggle-icon {
+    transform: rotate(180deg);
+}

@@ -4,7 +4,6 @@ import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { createServer as createViteServer } from 'vite';
 import { CityService } from './services/CityService.js';
 import { CacheManager } from './services/CacheManager.js';
 
@@ -19,45 +18,7 @@ app.use(cors());
 app.use(express.json());
 
 // ============================================================
-// 1. ПОДКЛЮЧАЕМ VITE (ПРАВИЛЬНАЯ КОНФИГУРАЦИЯ)
-// ============================================================
-
-let vite = null;
-let isDev = false;
-
-try {
-    const { createServer } = await import('vite');
-    
-    // Создаем Vite сервер в middleware режиме
-    vite = await createServer({
-        server: {
-            middlewareMode: true,
-            hmr: {
-                // Важно: указываем порт для HMR
-                port: 24678, // Отдельный порт для WebSocket
-                host: 'localhost'
-            },
-            // Отключаем автоматический open
-            open: false,
-        },
-        appType: 'spa',
-        root: path.join(__dirname, '../client'),
-        // Отключаем HMR в middleware режиме
-        // или настраиваем его правильно
-    });
-    
-    // Используем Vite middleware
-    app.use(vite.middlewares);
-    isDev = true;
-    console.log('✅ Vite подключен (режим разработки)');
-    console.log('   🔄 HMR работает на порту 24678');
-} catch (error) {
-    console.warn('⚠️ Не удалось подключить Vite:', error.message);
-    isDev = false;
-}
-
-// ============================================================
-// 2. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ
+// 1. ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ (СРАЗУ)
 // ============================================================
 
 const cacheManager = new CacheManager();
@@ -78,8 +39,11 @@ async function initializeServer() {
     }
 }
 
+// Запускаем инициализацию ДО того как подключаем Vite
+await initializeServer();
+
 // ============================================================
-// 3. API ЭНДПОИНТЫ
+// 2. API ЭНДПОИНТЫ (ДОЛЖНЫ БЫТЬ ПЕРВЫМИ!)
 // ============================================================
 
 app.get('/api/status', async (req, res) => {
@@ -92,10 +56,10 @@ app.get('/api/status', async (req, res) => {
             totalCities: total,
             cacheSize: cacheManager.getSize(),
             isRefreshing: cityService.isRefreshing || false,
-            mode: isDev ? 'development' : 'production'
+            mode: 'development'
         });
     } catch (error) {
-        res.json({
+        res.status(500).json({
             status: 'error',
             error: error.message,
             serverTime: new Date().toISOString()
@@ -106,7 +70,7 @@ app.get('/api/status', async (req, res) => {
 app.get('/api/cities', async (req, res) => {
     try {
         const {
-            limit = 1000,
+            limit = 5000,
             minPopulation = 0,
             maxPopulation,
             country,
@@ -115,6 +79,7 @@ app.get('/api/cities', async (req, res) => {
             bounds,
             isCapital = false,
             onlyMajor = false,
+            sortBy = 'population'
         } = req.query;
 
         let parsedBounds = null;
@@ -144,6 +109,7 @@ app.get('/api/cities', async (req, res) => {
             bounds: parsedBounds,
             isCapital: isCapital === 'true',
             onlyMajor: onlyMajor === 'true',
+            sortBy: String(sortBy)
         });
 
         res.json({
@@ -282,31 +248,38 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // ============================================================
-// 4. ОТДАЧА СТАТИЧЕСКИХ ФАЙЛОВ (если Vite не используется)
+// 3. VITE MIDDLEWARE (ТОЛЬКО ДЛЯ НЕ-API ЗАПРОСОВ)
 // ============================================================
 
-if (!isDev) {
-    const distPath = path.join(__dirname, '../dist');
-    const clientPath = path.join(__dirname, '../client');
-    
-    const staticPath = fs.existsSync(distPath) ? distPath : clientPath;
-    app.use(express.static(staticPath));
-    
-    app.get('*', (req, res) => {
-        const indexFile = path.join(staticPath, 'index.html');
-        if (fs.existsSync(indexFile)) {
-            res.sendFile(indexFile);
-        } else {
-            res.status(404).send('index.html not found');
-        }
+let vite = null;
+let isDev = false;
+
+try {
+    const { createServer } = await import('vite');
+    vite = await createServer({
+        server: {
+            middlewareMode: true,
+            hmr: {
+                port: 24678,
+                host: 'localhost'
+            },
+            open: false,
+        },
+        appType: 'spa',
+        root: path.join(__dirname, '../client'),
     });
+    app.use(vite.middlewares);
+    isDev = true;
+    console.log('✅ Vite подключен (режим разработки)');
+    console.log('   🔄 HMR работает на порту 24678');
+} catch (error) {
+    console.warn('⚠️ Не удалось подключить Vite:', error.message);
+    isDev = false;
 }
 
 // ============================================================
-// 5. ЗАПУСК СЕРВЕРА
+// 4. ЗАПУСК СЕРВЕРА
 // ============================================================
-
-await initializeServer();
 
 app.listen(PORT, () => {
     console.log('='.repeat(60));
@@ -320,6 +293,7 @@ app.listen(PORT, () => {
     if (isDev) {
         console.log(`🔄 Горячая перезагрузка: активна (порт 24678)`);
     }
+    console.log(`📊 Городов в кеше: ${cityService.allCities.length}`);
     console.log('='.repeat(60));
 });
 

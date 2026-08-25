@@ -25,20 +25,26 @@ export class GeographyContext {
         logger.info('Initializing Geography Context...');
 
         try {
+            // Создаем загрузчик
             this.cityLoader = new CityDataLoader();
             this.dataLoaders.set('cities', this.cityLoader);
 
+            // Создаем слой
             this.cityLayer = new CityLayer();
             this.cityLayer.setDataLoader(this.cityLoader);
             this.layers.push(this.cityLayer);
 
-            // Загружаем данные с сервера
+            // Показываем статус
             this.showStatus('🌍 Загрузка данных о городах...');
-            
+
+            // ПРИНУДИТЕЛЬНО загружаем данные с сервера
+            // Используем load() который сам проверит кеш и сервер
             const cities = await this.cityLoader.load({
                 limit: 5000,
-                minPopulation: 0 // Загружаем все города
+                minPopulation: 0
             });
+
+            logger.info(`Loaded ${cities.length} cities from loader`);
 
             if (cities && cities.length > 0) {
                 this.cachedData = cities;
@@ -46,15 +52,26 @@ export class GeographyContext {
                 this.state = ContextState.INITIALIZED;
                 logger.info(`✅ Geography Context initialized with ${cities.length} cities`);
                 this.showStatus(`✅ Загружено ${cities.length} городов`);
-                setTimeout(() => this.hideStatus(), 2000);
+                setTimeout(() => this.hideStatus(), 3000);
             } else {
-                throw new Error('No cities loaded');
+                // Если данных нет - пробуем еще раз с принудительным обновлением
+                logger.warn('No cities loaded, trying force refresh...');
+                const refreshed = await this.cityLoader.refreshCache();
+                if (refreshed && refreshed.length > 0) {
+                    this.cachedData = refreshed;
+                    await this.cityLayer.loadData(refreshed);
+                    this.state = ContextState.INITIALIZED;
+                    logger.info(`✅ Geography Context initialized with ${refreshed.length} cities (after refresh)`);
+                    this.showStatus(`✅ Загружено ${refreshed.length} городов`);
+                    setTimeout(() => this.hideStatus(), 3000);
+                } else {
+                    throw new Error('No cities loaded from server');
+                }
             }
-
         } catch (error) {
             this.state = ContextState.ERROR;
-            logger.error('Failed to initialize Geography Context', error);
-            this.showStatus('❌ Ошибка загрузки данных');
+            logger.error('Failed to initialize Geography Context:', error);
+            this.showStatus('❌ Ошибка загрузки данных: ' + error.message);
             throw error;
         }
     }
@@ -87,9 +104,17 @@ export class GeographyContext {
 
         try {
             if (this.cityLayer) {
-                // Восстанавливаем данные из кеша если они были
-                if (this.cachedData && !this.cityLayer.isDataLoaded()) {
-                    await this.cityLayer.loadData(this.cachedData);
+                // Если данных нет - загружаем
+                if (!this.cityLayer.isDataLoaded() || this.cityLayer.allCities.length === 0) {
+                    logger.info('No data in layer, loading from server...');
+                    const cities = await this.cityLoader.load({
+                        limit: 5000,
+                        minPopulation: 0
+                    });
+                    if (cities && cities.length > 0) {
+                        this.cachedData = cities;
+                        await this.cityLayer.loadData(cities);
+                    }
                 }
                 this.cityLayer.activate();
             }
@@ -98,13 +123,13 @@ export class GeographyContext {
             this.state = ContextState.ACTIVE;
             logger.info('Geography Context activated');
             
-            const count = this.cityLayer?.filteredCities?.length || 0;
+            const count = this.cityLayer?.filteredCities?.length || this.cityLayer?.allCities?.length || 0;
             this.showStatus(`🌍 ${count} городов на карте`);
             setTimeout(() => this.hideStatus(), 2000);
 
         } catch (error) {
             this.state = ContextState.ERROR;
-            logger.error('Failed to activate Geography Context', error);
+            logger.error('Failed to activate Geography Context:', error);
             throw error;
         }
     }
@@ -126,7 +151,7 @@ export class GeographyContext {
             logger.info('Geography Context deactivated');
         } catch (error) {
             this.state = ContextState.ERROR;
-            logger.error('Failed to deactivate Geography Context', error);
+            logger.error('Failed to deactivate Geography Context:', error);
             throw error;
         }
     }
